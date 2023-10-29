@@ -111,6 +111,67 @@ public class Model extends Observable {
         changed = false;
 
         // TODO: Modify this.board (and perhaps this.score) to account
+        board.setViewingPerspective(side);
+        int size = board.size();
+        for (int col = 0; col < size; col ++ ) {
+            // move all the tiles to make them adjacent
+            for (int row = size - 1; row >= 0; row -- ) {
+                Tile t = board.tile(col, row);
+                if (t != null) {
+                    // find nextPos which is null
+                    int nextPos = 3;
+                    while (nextPos >= row) {
+                        if (board.tile(col, nextPos) == null) {
+                            break;
+                        }
+                        nextPos -- ;
+                    }
+                    // check if nextPos is a legal position
+                    if (nextPos >= row) {
+                        board.move(col, nextPos, t);
+                        changed = true;
+                    }
+                }
+            }
+
+            // Step2. try to merge
+            // [2, 2, x, x] -> [4, x, x, x]
+            for (int row = 3; row >= 0; row -- ) {
+                Tile curTile = board.tile(col, row);
+                // find out the next row's tile
+                int nextLine = row - 1;
+                if (nextLine < 0) {
+                    break;
+                }
+                Tile nextTile = board.tile(col, nextLine);
+                // if one of the two tile is null we break this loop
+                if (curTile == null || nextTile == null) {
+                    break;
+                }
+                int nextValue = nextTile.value();
+                if (nextValue == curTile.value()) {
+                    // merge the two tiles whose value are equaled
+                    board.move(col, row, nextTile);
+                    score += curTile.value() * 2;
+                    // move the tiles behind the two merged tiles to the place where the second tiles was
+                    for (int p = nextLine - 1; p >= 0; p -- ) {
+                        Tile tile = board.tile(col, p);
+                        if (tile == null) {
+                            break;
+                        }
+                        if (p < size) {
+                            board.move(col, p + 1, tile);
+                        }
+                    }
+                    changed = true;
+                }
+            }
+        }
+        board.setViewingPerspective(Side.NORTH);
+
+
+
+
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
 
